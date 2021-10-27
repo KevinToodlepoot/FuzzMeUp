@@ -100,6 +100,8 @@ private:
     void updateDriveComp (const ChainSettings& chainSettings);
     void updateTrim (const ChainSettings& chainSettings);
     
+    void updateAll ();
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Fuzzmeup1AudioProcessor)
 };

@@ -104,19 +104,11 @@ void Fuzzmeup1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     leftChain.prepare(spec);
     rightChain.prepare(spec);
     
-    auto chainSettings = getChainSettings(apvts);
-    
     setShelfCoeff(20.f, 0.5f, 2.f);
-    
-    updateColor(chainSettings);
-    
-    updateDrive(chainSettings);
     
     setFunctionToUse();
     
-    updateDriveComp(chainSettings);
-    
-    updateTrim(chainSettings);
+    updateAll();
     
 }
 
@@ -166,16 +158,8 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    auto chainSettings = getChainSettings(apvts);
     
-    updateColor(chainSettings);
-
-    updateDrive(chainSettings);
-    
-    updateDriveComp(chainSettings);
-    
-    updateTrim(chainSettings);
+    updateAll();
     
     juce::dsp::AudioBlock<float> block(buffer);
     
@@ -208,22 +192,27 @@ bool Fuzzmeup1AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* Fuzzmeup1AudioProcessor::createEditor()
 {
-    //return new Fuzzmeup1AudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor (*this);
+    return new Fuzzmeup1AudioProcessorEditor (*this);
+//    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
 void Fuzzmeup1AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void Fuzzmeup1AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if ( tree.isValid() )
+    {
+        apvts.replaceState(tree);
+        updateAll();
+    }
 }
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
@@ -288,6 +277,19 @@ void Fuzzmeup1AudioProcessor::updateTrim(const ChainSettings& chainSettings)
 {
     leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
     rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+}
+
+void Fuzzmeup1AudioProcessor::updateAll()
+{
+    auto chainSettings = getChainSettings(apvts);
+    
+    updateColor(chainSettings);
+
+    updateDrive(chainSettings);
+    
+    updateDriveComp(chainSettings);
+    
+    updateTrim(chainSettings);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout
