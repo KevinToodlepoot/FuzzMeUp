@@ -106,34 +106,17 @@ void Fuzzmeup1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     
     auto chainSettings = getChainSettings(apvts);
     
-    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, chainSettings.color, 0.2f, 1.5f);
+    setShelfCoeff(20.f, 0.5f, 2.f);
     
-    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 20.f, 0.5f, 2.f);
+    updateColor(chainSettings);
     
-    *leftChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
-    *rightChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
+    updateDrive(chainSettings);
     
-    *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-    *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+    setFunctionToUse();
     
-    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
-    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    updateDriveComp(chainSettings);
     
-    leftChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
-    {
-        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
-    };
-    
-    rightChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
-    {
-        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
-    };
-    
-    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
-    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
-    
-    leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
-    rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    updateTrim(chainSettings);
     
 }
 
@@ -186,24 +169,13 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     auto chainSettings = getChainSettings(apvts);
     
-    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.2f, 1.5f);
+    updateColor(chainSettings);
+
+    updateDrive(chainSettings);
     
-    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 2.f);
+    updateDriveComp(chainSettings);
     
-    *leftChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
-    *rightChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
-    
-    *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-    *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-    
-    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
-    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
-    
-    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
-    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
-    
-    leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
-    rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    updateTrim(chainSettings);
     
     juce::dsp::AudioBlock<float> block(buffer);
     
@@ -264,6 +236,58 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
     settings.distType = apvts.getRawParameterValue("Distortion Type")->load();
     
     return settings;
+}
+
+void Fuzzmeup1AudioProcessor::setShelfCoeff (float cutoff, float q, float gain)
+{
+    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), cutoff, q, gain);
+    
+    updateCoefficients(leftChain.get<ChainPositions::LowShelf>().coefficients, shelfCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::LowShelf>().coefficients, shelfCoefficients);
+}
+
+void Fuzzmeup1AudioProcessor::updateColor (const ChainSettings& chainSettings)
+{
+    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.2f, 1.5f);
+    
+    updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+}
+
+void Fuzzmeup1AudioProcessor::updateCoefficients(Coefficients &old, const Coefficients &replacements)
+{
+    *old = *replacements;
+}
+
+void Fuzzmeup1AudioProcessor::updateDrive(const ChainSettings& chainSettings)
+{
+    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+}
+
+void Fuzzmeup1AudioProcessor::setFunctionToUse()
+{
+    leftChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    {
+        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+    };
+    
+    rightChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    {
+        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+    };
+}
+
+void Fuzzmeup1AudioProcessor::updateDriveComp(const ChainSettings& chainSettings)
+{
+    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * chainSettings.drive)));
+    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * chainSettings.drive)));
+}
+
+void Fuzzmeup1AudioProcessor::updateTrim(const ChainSettings& chainSettings)
+{
+    leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout

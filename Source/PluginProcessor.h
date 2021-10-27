@@ -90,6 +90,16 @@ private:
         Trim
     };
     
+    using Coefficients = Filter::CoefficientsPtr;
+    
+    void setShelfCoeff (float cutoff, float q, float gain);
+    void updateColor (const ChainSettings& chainSettings);
+    static void updateCoefficients (Coefficients& old, const Coefficients& replacements);
+    void updateDrive (const ChainSettings& chainSettings);
+    void setFunctionToUse ();
+    void updateDriveComp (const ChainSettings& chainSettings);
+    void updateTrim (const ChainSettings& chainSettings);
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Fuzzmeup1AudioProcessor)
 };
