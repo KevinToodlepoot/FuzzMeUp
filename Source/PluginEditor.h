@@ -11,14 +11,16 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+#define COOL_GRAY       Colour( 228u, 229u, 232u )
+#define GUNMETAL_GRAY   Colour( 83u, 86u, 90u )
+#define BURGUNDY        Colour( 77u, 0u, 17u )
+#define OLIVE_GREEN     Colour( 75u, 68u, 60u )
+
 struct LookAndFeel : juce::LookAndFeel_V4
 {
     void drawRotarySlider (juce::Graphics&, int x, int y, int width, int height,
                            float sliderPosProportional, float rotaryStartAngle,
-                           float rotaryEndAngle, juce::Slider&) override
-    {
-        
-    }
+                           float rotaryEndAngle, juce::Slider&) override;
 };
 
 struct RotarySliderWithLabels : juce::Slider
@@ -37,7 +39,7 @@ struct RotarySliderWithLabels : juce::Slider
         setLookAndFeel(nullptr);
     }
     
-    void paint(juce::Graphics& g) override { }
+    void paint(juce::Graphics& g) override;
     juce::Rectangle<int> getSliderBounds() const;
     int getTextHeight() const { return 14; }
     juce::String getDisplayString() const;
