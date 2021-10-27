@@ -12,6 +12,9 @@
 //==============================================================================
 Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p),
+        driveSlider(*audioProcessor.apvts.getParameter("Drive"), ""),
+        colorSlider(*audioProcessor.apvts.getParameter("Color"), ""),
+        trimSlider(*audioProcessor.apvts.getParameter("Trim"), "dB"),
         driveSliderAttachment(audioProcessor.apvts, "Drive", driveSlider),
         colorSliderAttachment(audioProcessor.apvts, "Color", colorSlider),
         trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider)
