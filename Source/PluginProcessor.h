@@ -63,6 +63,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+    float fuzzExp1 (float x, float k);
+    
     static juce::AudioProcessorValueTreeState::ParameterLayout
         createParameterLayout();
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
@@ -70,9 +72,11 @@ public:
 private:
     using Filter = juce::dsp::IIR::Filter<float>;
     
+    using Gain = juce::dsp::Gain<float>;
+    
     using WaveShaper = juce::dsp::WaveShaper<float>;
     
-    using MonoChain = juce::dsp::ProcessorChain<Filter, Filter, WaveShaper>;
+    using MonoChain = juce::dsp::ProcessorChain<Filter, Filter, Gain, WaveShaper, Gain, Gain>;
     
     MonoChain leftChain, rightChain;
     
@@ -80,7 +84,10 @@ private:
     {
         LowShelf,
         Peak,
-        WaveShaper
+        Drive,
+        Distortion,
+        DriveComp,
+        Trim
     };
     
     //==============================================================================

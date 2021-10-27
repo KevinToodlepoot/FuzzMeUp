@@ -115,6 +115,26 @@ void Fuzzmeup1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     
     *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
     *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+    
+    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    
+    leftChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    {
+        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+    };
+    
+    rightChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    {
+        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+    };
+    
+    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
+    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
+    
+    leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    
 }
 
 void Fuzzmeup1AudioProcessor::releaseResources()
@@ -176,6 +196,15 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
     *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
     
+    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    
+    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
+    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1 - exp(-1 * chainSettings.drive)));
+    
+    leftChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    rightChain.get<ChainPositions::Trim>().setGainDecibels(chainSettings.trim);
+    
     juce::dsp::AudioBlock<float> block(buffer);
     
     auto leftBlock = block.getSingleChannelBlock(0);
@@ -186,6 +215,17 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
      
     leftChain.process(leftContext);
     rightChain.process(rightContext);
+}
+
+float Fuzzmeup1AudioProcessor::fuzzExp1(float x, float k)
+{
+    float out;
+    int sign;
+    
+    sign = (x < 0) ? -1 : 1;
+    out = sign * (1 - exp( -1 * fabs(x * k))) / (1 - exp(-1 * k));
+                  
+    return out;
 }
 
 //==============================================================================
@@ -233,12 +273,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Drive",
                                                            "Drive",
-                                                           juce::NormalisableRange<float>(1.f, 30.f, 0.1f, 1.f),
-                                                           1.f));
+                                                           juce::NormalisableRange<float>(0.5f, 30.f, 0.1f, 1.f),
+                                                           0.5f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Color",
                                                            "Color",
-                                                           juce::NormalisableRange<float>(100.f, 18000.f, 1.f, 1.f),
+                                                           juce::NormalisableRange<float>(100.f, 18000.f, 1.f, 0.25f),
                                                            100.f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Trim",
