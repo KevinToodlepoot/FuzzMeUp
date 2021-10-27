@@ -10,6 +10,16 @@
 
 #include <JuceHeader.h>
 
+struct ChainSettings
+{
+    float drive { 0 };
+    float color { 0 };
+    float trim { 0 };
+    int distType { 0 };
+};
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
+
 //==============================================================================
 /**
 */
@@ -58,6 +68,21 @@ public:
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
 
 private:
+    using Filter = juce::dsp::IIR::Filter<float>;
+    
+    using WaveShaper = juce::dsp::WaveShaper<float>;
+    
+    using MonoChain = juce::dsp::ProcessorChain<Filter, Filter, WaveShaper>;
+    
+    MonoChain leftChain, rightChain;
+    
+    enum ChainPositions
+    {
+        LowShelf,
+        Peak,
+        WaveShaper
+    };
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Fuzzmeup1AudioProcessor)
 };

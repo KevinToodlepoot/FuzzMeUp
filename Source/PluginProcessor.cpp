@@ -93,8 +93,28 @@ void Fuzzmeup1AudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void Fuzzmeup1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    juce::dsp::ProcessSpec spec;
+    
+    spec.maximumBlockSize = samplesPerBlock;
+    
+    spec.numChannels = 1;
+    
+    spec.sampleRate = sampleRate;
+    
+    leftChain.prepare(spec);
+    rightChain.prepare(spec);
+    
+    auto chainSettings = getChainSettings(apvts);
+    
+    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, chainSettings.color, 0.2f, 1.5f);
+    
+    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 20.f, 0.5f, 2.f);
+    
+    *leftChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
+    *rightChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
+    
+    *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+    *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
 }
 
 void Fuzzmeup1AudioProcessor::releaseResources()
@@ -144,18 +164,28 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+    auto chainSettings = getChainSettings(apvts);
+    
+    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.2f, 1.5f);
+    
+    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 2.f);
+    
+    *leftChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
+    *rightChain.get<ChainPositions::LowShelf>().coefficients = *shelfCoefficients;
+    
+    *leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+    *rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+    
+    juce::dsp::AudioBlock<float> block(buffer);
+    
+    auto leftBlock = block.getSingleChannelBlock(0);
+    auto rightBlock = block.getSingleChannelBlock(1);
+    
+    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
+    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
+     
+    leftChain.process(leftContext);
+    rightChain.process(rightContext);
 }
 
 //==============================================================================
@@ -184,6 +214,18 @@ void Fuzzmeup1AudioProcessor::setStateInformation (const void* data, int sizeInB
     // whose contents will have been created by the getStateInformation() call.
 }
 
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
+{
+    ChainSettings settings;
+    
+    settings.drive = apvts.getRawParameterValue("Drive")->load();
+    settings.color = apvts.getRawParameterValue("Color")->load();
+    settings.trim = apvts.getRawParameterValue("Trim")->load();
+    settings.distType = apvts.getRawParameterValue("Distortion Type")->load();
+    
+    return settings;
+}
+
 juce::AudioProcessorValueTreeState::ParameterLayout
     Fuzzmeup1AudioProcessor::createParameterLayout()
 {
@@ -193,6 +235,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout
                                                            "Drive",
                                                            juce::NormalisableRange<float>(1.f, 30.f, 0.1f, 1.f),
                                                            1.f));
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Color",
+                                                           "Color",
+                                                           juce::NormalisableRange<float>(100.f, 18000.f, 1.f, 1.f),
+                                                           100.f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Trim",
                                                            "Trim",
