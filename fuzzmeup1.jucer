@@ -13,6 +13,10 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="G4twAf" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <GROUP id="{7DDBC197-D7B9-2E26-7BFD-E2356D7EC809}" name="Images">
+      <FILE id="cqtxip" name="Background.png" compile="0" resource="1" file="Images/Background.png"/>
+      <FILE id="kZXO9k" name="Title.png" compile="0" resource="1" file="Images/Title.png"/>
+    </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>

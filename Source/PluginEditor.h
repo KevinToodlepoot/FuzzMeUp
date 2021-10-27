@@ -77,6 +77,9 @@ private:
     // access the processor object that created it.
     Fuzzmeup1AudioProcessor& audioProcessor;
     
+//    juce::ImageComponent titleImageComponent;
+    juce::ImageComponent bgImageComponent;
+    
     RotarySliderWithLabels  driveSlider,
                             colorSlider,
                             trimSlider;

@@ -26,8 +26,8 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
     g.setColour(COOL_GRAY);
     g.fillEllipse(bounds);
     
-    g.setColour(OLIVE_GREEN);
-    g.drawEllipse(bounds, 5.f);
+    g.setColour(Colours::black);
+    g.drawEllipse(bounds, 3.f);
     
     if (auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
     {
@@ -196,6 +196,23 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     
+    auto bgImage = juce::ImageCache::getFromMemory(BinaryData::Background_png,
+                                                   BinaryData::Background_pngSize);
+    
+    if (!bgImage.isNull())
+        bgImageComponent.setImage(bgImage,juce::RectanglePlacement::stretchToFit);
+    else
+        jassert(!bgImage.isNull());
+    
+    addAndMakeVisible(bgImageComponent);
+    
+//    auto titleImage = juce::ImageCache::getFromMemory(BinaryData::Title_png,
+//                                                      BinaryData::Title_pngSize);
+//    if( !titleImage.isNull() )
+//        titleImageComponent.setImage(titleImage, juce::RectanglePlacement::stretchToFit);
+//    else
+//        jassert(!titleImage.isNull());
+    
     driveSlider.labels.add({0.f, "0"});
     driveSlider.labels.add({1.f, "10"});
     colorSlider.labels.add({0.f, "20Hz"});
@@ -207,6 +224,8 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
     {
         addAndMakeVisible(comp);
     }
+    
+//    addAndMakeVisible(titleImageComponent);
     
     setSize (500, 500);
 }
@@ -229,10 +248,15 @@ void Fuzzmeup1AudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     auto bounds = getLocalBounds();
+    
+    bgImageComponent.setBounds(bounds);
+    
     auto titleArea = bounds.removeFromTop(bounds.getHeight() * 0.25);
     
     auto colorArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto trimArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
+    
+//    titleImageComponent.setBounds(titleArea);
     
     colorSlider.setBounds(colorArea.removeFromBottom(colorArea.getHeight() * 0.75));
     trimSlider.setBounds(trimArea.removeFromBottom(trimArea.getHeight() * 0.75));
