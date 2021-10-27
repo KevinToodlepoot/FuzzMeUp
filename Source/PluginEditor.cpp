@@ -11,7 +11,10 @@
 
 //==============================================================================
 Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+        driveSliderAttachment(audioProcessor.apvts, "Drive", driveSlider),
+        colorSliderAttachment(audioProcessor.apvts, "Color", colorSlider),
+        trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.

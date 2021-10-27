@@ -38,9 +38,16 @@ private:
     // access the processor object that created it.
     Fuzzmeup1AudioProcessor& audioProcessor;
     
-    CustomRotarySlider driveSlider,
-    colorSlider,
-    trimSlider;
+    CustomRotarySlider  driveSlider,
+                        colorSlider,
+                        trimSlider;
+    
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using Attachment = APVTS::SliderAttachment;
+    
+    Attachment  driveSliderAttachment,
+                colorSliderAttachment,
+                trimSliderAttachment;
     
     std::vector<juce::Component*> getComps();
 
