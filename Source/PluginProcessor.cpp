@@ -166,7 +166,8 @@ bool Fuzzmeup1AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* Fuzzmeup1AudioProcessor::createEditor()
 {
-    return new Fuzzmeup1AudioProcessorEditor (*this);
+    //return new Fuzzmeup1AudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
@@ -181,6 +182,31 @@ void Fuzzmeup1AudioProcessor::setStateInformation (const void* data, int sizeInB
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+    Fuzzmeup1AudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Drive",
+                                                           "Drive",
+                                                           juce::NormalisableRange<float>(1.f, 30.f, 0.1f, 1.f),
+                                                           1.f));
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Trim",
+                                                           "Trim",
+                                                           juce::NormalisableRange<float>(-24.f, 6.f, 0.1f, 1.0f),
+                                                           0.f));
+    
+    juce::StringArray stringArray;
+    stringArray.add("F");
+    stringArray.add("B");
+    stringArray.add("T");
+    
+    layout.add(std::make_unique<juce::AudioParameterChoice>("Distortion Type", "Distortion Type", stringArray, 0));
+    
+    return layout;
 }
 
 //==============================================================================

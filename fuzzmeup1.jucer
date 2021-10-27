@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="aBjtRW" name="fuzzmeup1" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              cppLanguageStandard="17">
   <MAINGROUP id="CH6DGl" name="fuzzmeup1">
     <GROUP id="{8C3C4BB0-5B6F-4CE5-E919-84981AAC16AD}" name="Source">
       <FILE id="v5H7E2" name="PluginProcessor.cpp" compile="1" resource="0"
