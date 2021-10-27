@@ -237,7 +237,7 @@ void Fuzzmeup1AudioProcessor::setShelfCoeff (float cutoff, float q, float gain)
 
 void Fuzzmeup1AudioProcessor::updateColor (const ChainSettings& chainSettings)
 {
-    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.2f, 1.5f);
+    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.33f, 2.f);
     
     updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
@@ -299,13 +299,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Drive",
                                                            "Drive",
-                                                           juce::NormalisableRange<float>(0.5f, 30.f, 0.1f, 1.f),
+                                                           juce::NormalisableRange<float>(0.04f, 10.f, 0.01f, 1.f),
                                                            0.5f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Color",
                                                            "Color",
-                                                           juce::NormalisableRange<float>(100.f, 18000.f, 1.f, 0.25f),
-                                                           100.f));
+                                                           juce::NormalisableRange<float>(20.f, 10000.f, 1.f, 0.25f),
+                                                           20.f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Trim",
                                                            "Trim",
