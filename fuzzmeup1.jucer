@@ -14,8 +14,16 @@
       <FILE id="G4twAf" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
     <GROUP id="{7DDBC197-D7B9-2E26-7BFD-E2356D7EC809}" name="Images">
-      <FILE id="cqtxip" name="Background.png" compile="0" resource="1" file="Images/Background.png"/>
-      <FILE id="kZXO9k" name="Title.png" compile="0" resource="1" file="Images/Title.png"/>
+      <FILE id="KHDkfh" name="FButtonOff.png" compile="0" resource="1" file="Images/FButtonOff.png"/>
+      <FILE id="IbarTa" name="FButtonOn.png" compile="0" resource="1" file="Images/FButtonOn.png"/>
+      <FILE id="EX2z0N" name="MButtonOff.png" compile="0" resource="1" file="Images/MButtonOff.png"/>
+      <FILE id="H195dv" name="MButtonOn.png" compile="0" resource="1" file="Images/MButtonOn.png"/>
+      <FILE id="IwHjX4" name="UButtonOff.png" compile="0" resource="1" file="Images/UButtonOff.png"/>
+      <FILE id="nsyPL3" name="UButtonOn.png" compile="0" resource="1" file="Images/UButtonOn.png"/>
+      <FILE id="tSl3nU" name="BG.png" compile="0" resource="1" file="Images/BG.png"/>
+      <FILE id="LChRpn" name="KnobTextureTransparent.png" compile="0" resource="1"
+            file="Images/KnobTextureTransparent.png"/>
+      <FILE id="dT8sjt" name="KnobTexture.png" compile="0" resource="1" file="Images/KnobTexture.png"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

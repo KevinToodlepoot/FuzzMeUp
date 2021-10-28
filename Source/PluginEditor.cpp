@@ -23,10 +23,12 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
     
     auto bounds = Rectangle<float>(x, y, width, height);
     
-    g.setColour(COOL_GRAY);
+    /* Slider Fill */
+    g.setColour(TANGERINE);
     g.fillEllipse(bounds);
     
-    g.setColour(Colours::black);
+    /* Slider outline */
+    g.setColour(Colour(104u, 57u, 0u));
     g.drawEllipse(bounds, 3.f);
     
     if (auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
@@ -37,12 +39,14 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
         Path p;
         
         Rectangle<float> r;
-        r.setLeft(center.getX() - 2);
-        r.setRight(center.getX() + 2);
-        r.setTop(bounds.getY());
-        r.setBottom(center.getY() - rswl->getTextHeight() * 2.f);
+        r.setLeft(center.getX() - 4);
+        r.setRight(center.getX() + 4);
+        r.setTop(bounds.getY() + 6);
+//        r.setBottom(center.getY() - rswl->getTextHeight() * 2.f);
+        r.setBottom(bounds.getY() + 14);
         
-        p.addRoundedRectangle(r, 2.f);
+        p.addEllipse(r);
+        
         
         jassert(rotaryStartAngle < rotaryEndAngle);
         
@@ -58,12 +62,13 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
         auto strWidth = g.getCurrentFont().getStringWidth(text);
         
         r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
-        r.setCentre(bounds.getCentre());
+        r.setCentre(bounds.getCentreX(), bounds.getBottom() + rswl->getTextHeight());
+//        r.setCentre(bounds.getCentre());
         
 //        g.setColour(Colours::black);
 //        g.fillRect(r);
         
-        g.setColour(BURGUNDY);
+        g.setColour(LILAC);
         g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
     }
     
@@ -100,7 +105,7 @@ void RotarySliderWithLabels::paint(juce::Graphics& g)
     auto center = sliderBounds.toFloat().getCentre();
     auto radius = sliderBounds.getWidth() * 0.5f;
     
-    g.setColour(COOL_GRAY);
+    g.setColour(LILAC);
     g.setFont(getTextHeight());
     
     auto numChoices = labels.size();
@@ -191,27 +196,15 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
         trimSlider(*audioProcessor.apvts.getParameter("Trim"), "dB"),
         driveSliderAttachment(audioProcessor.apvts, "Drive", driveSlider),
         colorSliderAttachment(audioProcessor.apvts, "Color", colorSlider),
-        trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider)
+        trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider),
+        fButtonAttachment(audioProcessor.apvts, "Distortion Type", fButton),
+        mButtonAttachment(audioProcessor.apvts, "Distortion Type", mButton),
+        uButtonAttachment(audioProcessor.apvts, "Distortion Type", uButton)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     
-    auto bgImage = juce::ImageCache::getFromMemory(BinaryData::Background_png,
-                                                   BinaryData::Background_pngSize);
-    
-    if (!bgImage.isNull())
-        bgImageComponent.setImage(bgImage,juce::RectanglePlacement::stretchToFit);
-    else
-        jassert(!bgImage.isNull());
-    
-    addAndMakeVisible(bgImageComponent);
-    
-//    auto titleImage = juce::ImageCache::getFromMemory(BinaryData::Title_png,
-//                                                      BinaryData::Title_pngSize);
-//    if( !titleImage.isNull() )
-//        titleImageComponent.setImage(titleImage, juce::RectanglePlacement::stretchToFit);
-//    else
-//        jassert(!titleImage.isNull());
+    loadImages();
     
     driveSlider.labels.add({0.f, "0"});
     driveSlider.labels.add({1.f, "10"});
@@ -225,8 +218,12 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
         addAndMakeVisible(comp);
     }
     
-//    addAndMakeVisible(titleImageComponent);
+    fButton.setImages(false, false, true, fButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), fButtonOn, 1.f, juce::Colour());
     
+    mButton.setImages(false, false, true, mButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), mButtonOn, 1.f, juce::Colour());
+    
+    uButton.setImages(false, false, true, uButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), uButtonOn, 1.f, juce::Colour());
+        
     setSize (500, 500);
 }
 
@@ -239,7 +236,8 @@ void Fuzzmeup1AudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
 //    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-    g.fillAll (juce::GUNMETAL_GRAY);
+//    g.fillAll (juce::INDIGO);
+    g.drawImage(bgImage, 0, 0, 500, 500, 0, 0, 500, 500);
 }
 
 void Fuzzmeup1AudioProcessorEditor::resized()
@@ -248,21 +246,68 @@ void Fuzzmeup1AudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     auto bounds = getLocalBounds();
-    
-    bgImageComponent.setBounds(bounds);
-    
+        
     auto titleArea = bounds.removeFromTop(bounds.getHeight() * 0.25);
     
     auto colorArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto trimArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
-    
-//    titleImageComponent.setBounds(titleArea);
-    
+        
     colorSlider.setBounds(colorArea.removeFromBottom(colorArea.getHeight() * 0.75));
     trimSlider.setBounds(trimArea.removeFromBottom(trimArea.getHeight() * 0.75));
     
     driveSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
     
+    auto fButtonArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
+    auto uButtonArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
+    
+    fButton.setBounds(fButtonArea.removeFromBottom(fButtonArea.getHeight() * 0.75));
+    uButton.setBounds(uButtonArea.removeFromBottom(uButtonArea.getHeight() * 0.75));
+    mButton.setBounds(bounds.removeFromBottom(bounds.getHeight() * 0.75));
+}
+
+void Fuzzmeup1AudioProcessorEditor::loadImages()
+{
+    bgImage = juce::ImageCache::getFromMemory(BinaryData::BG_png,
+                                              BinaryData::BG_pngSize);
+    
+    if (bgImage.isNull())
+        jassert(bgImage.isNull());
+    
+    fButtonOff = juce::ImageCache::getFromMemory(BinaryData::FButtonOff_png,
+                                                 BinaryData::FButtonOff_pngSize);
+    
+    if (fButtonOff.isNull())
+        jassert(fButtonOff.isNull());
+    
+    fButtonOn = juce::ImageCache::getFromMemory(BinaryData::FButtonOn_png,
+                                                 BinaryData::FButtonOn_pngSize);
+    
+    if (fButtonOn.isNull())
+        jassert(fButtonOn.isNull());
+    
+    mButtonOff = juce::ImageCache::getFromMemory(BinaryData::MButtonOff_png,
+                                                 BinaryData::MButtonOff_pngSize);
+    
+    if (mButtonOff.isNull())
+        jassert(mButtonOff.isNull());
+    
+    mButtonOn = juce::ImageCache::getFromMemory(BinaryData::MButtonOn_png,
+                                                 BinaryData::MButtonOn_pngSize);
+    
+    if (mButtonOn.isNull())
+        jassert(mButtonOn.isNull());
+    
+    uButtonOff = juce::ImageCache::getFromMemory(BinaryData::UButtonOff_png,
+                                                 BinaryData::UButtonOff_pngSize);
+    
+    if (uButtonOff.isNull())
+        jassert(uButtonOff.isNull());
+    
+    uButtonOn = juce::ImageCache::getFromMemory(BinaryData::UButtonOn_png,
+                                                 BinaryData::UButtonOn_pngSize);
+    
+    if (uButtonOn.isNull())
+        jassert(uButtonOn.isNull());
 }
 
 std::vector<juce::Component*> Fuzzmeup1AudioProcessorEditor::getComps()
@@ -271,6 +316,9 @@ std::vector<juce::Component*> Fuzzmeup1AudioProcessorEditor::getComps()
     {
         &driveSlider,
         &colorSlider,
-        &trimSlider
+        &trimSlider,
+        &fButton,
+        &mButton,
+        &uButton
     };
 }

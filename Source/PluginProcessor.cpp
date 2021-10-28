@@ -314,8 +314,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     
     juce::StringArray stringArray;
     stringArray.add("F");
-    stringArray.add("B");
-    stringArray.add("T");
+    stringArray.add("M");
+    stringArray.add("U");
     
     layout.add(std::make_unique<juce::AudioParameterChoice>("Distortion Type", "Distortion Type", stringArray, 0));
     

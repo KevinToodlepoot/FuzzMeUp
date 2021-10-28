@@ -16,6 +16,11 @@
 #define BURGUNDY        Colour( 77u, 0u, 17u )
 #define OLIVE_GREEN     Colour( 75u, 68u, 60u )
 
+#define ROSE_QUARTZ     Colour(246u, 205u, 196u)
+#define TANGERINE       Colour(252u, 132u, 31u)
+#define LILAC           Colour(180u, 151u, 191u)
+#define INDIGO          Colour(93u, 25u, 102u)
+
 struct LookAndFeel : juce::LookAndFeel_V4
 {
     void drawRotarySlider (juce::Graphics&, int x, int y, int width, int height,
@@ -71,18 +76,28 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    void loadImages();
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Fuzzmeup1AudioProcessor& audioProcessor;
     
-//    juce::ImageComponent titleImageComponent;
-    juce::ImageComponent bgImageComponent;
+    juce::Image bgImage,
+                fButtonOff,
+                fButtonOn,
+                mButtonOff,
+                mButtonOn,
+                uButtonOff,
+                uButtonOn;
     
     RotarySliderWithLabels  driveSlider,
                             colorSlider,
                             trimSlider;
+    
+    juce::ImageButton   fButton,
+                        mButton,
+                        uButton;
     
     using APVTS = juce::AudioProcessorValueTreeState;
     using Attachment = APVTS::SliderAttachment;
@@ -90,6 +105,10 @@ private:
     Attachment  driveSliderAttachment,
                 colorSliderAttachment,
                 trimSliderAttachment;
+    
+    APVTS::ButtonAttachment fButtonAttachment,
+                            mButtonAttachment,
+                            uButtonAttachment;
     
     std::vector<juce::Component*> getComps();
 
