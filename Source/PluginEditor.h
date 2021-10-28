@@ -20,6 +20,7 @@
 #define TANGERINE       Colour(252u, 132u, 31u)
 #define LILAC           Colour(180u, 151u, 191u)
 #define INDIGO          Colour(93u, 25u, 102u)
+#define DARK_TANGERINE  Colour(104u, 57u, 0u)
 
 struct LookAndFeel : juce::LookAndFeel_V4
 {

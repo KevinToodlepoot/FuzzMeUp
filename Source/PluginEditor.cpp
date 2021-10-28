@@ -25,10 +25,11 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
     
     /* Slider Fill */
     g.setColour(TANGERINE);
+    g.setGradientFill(juce::ColourGradient(TANGERINE, bounds.getCentreX(), bounds.getCentreY(), DARK_TANGERINE, bounds.getCentreX() + (bounds.getWidth() * 0.85f), bounds.getCentreY() + (bounds.getHeight() * 0.85f), true));
     g.fillEllipse(bounds);
     
     /* Slider outline */
-    g.setColour(Colour(104u, 57u, 0u));
+    g.setColour(DARK_TANGERINE);
     g.drawEllipse(bounds, 3.f);
     
     if (auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
@@ -197,9 +198,9 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
         driveSliderAttachment(audioProcessor.apvts, "Drive", driveSlider),
         colorSliderAttachment(audioProcessor.apvts, "Color", colorSlider),
         trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider),
-        fButtonAttachment(audioProcessor.apvts, "Distortion Type", fButton),
-        mButtonAttachment(audioProcessor.apvts, "Distortion Type", mButton),
-        uButtonAttachment(audioProcessor.apvts, "Distortion Type", uButton)
+        fButtonAttachment(audioProcessor.apvts, "F Button", fButton),
+        mButtonAttachment(audioProcessor.apvts, "M Button", mButton),
+        uButtonAttachment(audioProcessor.apvts, "U Button", uButton)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -218,12 +219,20 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
         addAndMakeVisible(comp);
     }
     
-    fButton.setImages(false, false, true, fButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), fButtonOn, 1.f, juce::Colour());
+    fButton.setImages(false, true, true, fButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), fButtonOn, 1.f, juce::Colour());
     
-    mButton.setImages(false, false, true, mButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), mButtonOn, 1.f, juce::Colour());
+    mButton.setImages(false, true, true, mButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), mButtonOn, 1.f, juce::Colour());
     
-    uButton.setImages(false, false, true, uButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), uButtonOn, 1.f, juce::Colour());
+    uButton.setImages(false, true, true, uButtonOff, 1.f, juce::Colour(), juce::Image(), 1.f, juce::Colour(), uButtonOn, 1.f, juce::Colour());
         
+    fButton.setClickingTogglesState(true);
+    mButton.setClickingTogglesState(true);
+    uButton.setClickingTogglesState(true);
+    
+    fButton.setRadioGroupId(1001);
+    mButton.setRadioGroupId(1001);
+    uButton.setRadioGroupId(1001);
+    
     setSize (500, 500);
 }
 
@@ -247,7 +256,7 @@ void Fuzzmeup1AudioProcessorEditor::resized()
     
     auto bounds = getLocalBounds();
         
-    auto titleArea = bounds.removeFromTop(bounds.getHeight() * 0.25);
+    bounds.removeFromTop(bounds.getHeight() * 0.25);
     
     auto colorArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto trimArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
@@ -257,6 +266,8 @@ void Fuzzmeup1AudioProcessorEditor::resized()
     
     driveSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
     
+    bounds.removeFromTop(bounds.getHeight() * 0.2);
+    bounds.removeFromBottom(bounds.getHeight() * 0.1);
     auto fButtonArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto uButtonArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
     

@@ -104,9 +104,7 @@ void Fuzzmeup1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     leftChain.prepare(spec);
     rightChain.prepare(spec);
     
-    setShelfCoeff(20.f, 0.5f, 2.f);
-    
-    setFunctionToUse();
+    setSecondFunctionToUse();
     
     updateAll();
     
@@ -222,14 +220,26 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
     settings.drive = apvts.getRawParameterValue("Drive")->load();
     settings.color = apvts.getRawParameterValue("Color")->load();
     settings.trim = apvts.getRawParameterValue("Trim")->load();
-    settings.distType = apvts.getRawParameterValue("Distortion Type")->load();
+    settings.fButtonState = apvts.getRawParameterValue("F Button")->load();
+    settings.mButtonState = apvts.getRawParameterValue("M Button")->load();
+    settings.uButtonState = apvts.getRawParameterValue("U Button")->load();
     
     return settings;
 }
 
-void Fuzzmeup1AudioProcessor::setShelfCoeff (float cutoff, float q, float gain)
+void Fuzzmeup1AudioProcessor::updateShelfCoefficients (const ChainSettings& chainSettings)
 {
-    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), cutoff, q, gain);
+    
+    auto shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 2.f);
+    
+    if (chainSettings.fButtonState)
+        shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 2.f);
+    else if (chainSettings.mButtonState)
+        shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 0.5f);
+    else if (chainSettings.uButtonState)
+        shelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), 20.f, 0.5f, 1.f);
+    else
+        jassert("no buttons are on");
     
     updateCoefficients(leftChain.get<ChainPositions::LowShelf>().coefficients, shelfCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::LowShelf>().coefficients, shelfCoefficients);
@@ -248,29 +258,101 @@ void Fuzzmeup1AudioProcessor::updateCoefficients(Coefficients &old, const Coeffi
     *old = *replacements;
 }
 
-void Fuzzmeup1AudioProcessor::updateDrive(const ChainSettings& chainSettings)
+void Fuzzmeup1AudioProcessor::updateBias(const ChainSettings &chainSettings)
 {
-    leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
-    rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive);
+    if (chainSettings.uButtonState)
+    {
+        leftChain.get<ChainPositions::BiasPos>().setBias(1.f);
+        rightChain.get<ChainPositions::BiasPos>().setBias(1.f);
+    }
+    else
+    {
+        leftChain.get<ChainPositions::BiasPos>().setBias(0.f);
+        rightChain.get<ChainPositions::BiasPos>().setBias(0.f);
+    }
 }
 
-void Fuzzmeup1AudioProcessor::setFunctionToUse()
+void Fuzzmeup1AudioProcessor::updateDrive(const ChainSettings& chainSettings)
 {
-    leftChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    if (chainSettings.mButtonState)
     {
-        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+        leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive * 10.f);
+        rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive * 10.f);
+    }
+    else
+    {
+        leftChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive * 5.f);
+        rightChain.get<ChainPositions::Drive>().setGainLinear(chainSettings.drive * 5.f);
+    }
+}
+
+void Fuzzmeup1AudioProcessor::setFirstFunctionToUse(bool onOff)
+{
+    if (onOff)
+    {
+        leftChain.get<ChainPositions::Distortion1>().functionToUse = [] (float x)
+        {
+            return ((-x < 0) ? -1.f : 1.f) * (1.f - exp(fabs(x))) / (juce::MathConstants<float>::euler - 1.f);
+        };
+        
+        rightChain.get<ChainPositions::Distortion1>().functionToUse = [] (float x)
+        {
+            return ((-x < 0) ? -1.f : 1.f) * (1.f - exp(fabs(x))) / (juce::MathConstants<float>::euler - 1.f);
+        };
+    }
+    else
+    {
+        leftChain.get<ChainPositions::Distortion1>().functionToUse = [] (float x)
+        {
+            return x;
+        };
+        
+        rightChain.get<ChainPositions::Distortion1>().functionToUse = [] (float x)
+        {
+            return x;
+        };
+    }
+}
+
+void Fuzzmeup1AudioProcessor::setSecondFunctionToUse()
+{
+    leftChain.get<ChainPositions::Distortion2>().functionToUse = [] (float x)
+    {
+        return ((x < 0) ? -1.f : 1.f) * (1.f - exp(-1.f * fabs(x)));
     };
     
-    rightChain.get<ChainPositions::Distortion>().functionToUse = [] (float x)
+    rightChain.get<ChainPositions::Distortion2>().functionToUse = [] (float x)
     {
-        return ((x < 0) ? -1 : 1) * (1 - exp(-1 * fabs(x)));
+        return ((x < 0) ? -1.f : 1.f) * (1.f - exp(-1.f * fabs(x)));
     };
 }
 
 void Fuzzmeup1AudioProcessor::updateDriveComp(const ChainSettings& chainSettings)
 {
-    leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * chainSettings.drive)));
-    rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * chainSettings.drive)));
+    if (chainSettings.mButtonState)
+    {
+        leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * (chainSettings.drive * 10.f))));
+        rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * (chainSettings.drive * 10.f))));
+    }
+    else
+    {
+        leftChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * (chainSettings.drive * 5.f))));
+        rightChain.get<ChainPositions::DriveComp>().setGainLinear(1.f / (1.f - exp(-1.f * (chainSettings.drive * 5.f))));
+    }
+}
+
+void Fuzzmeup1AudioProcessor::updateDCBlock(const ChainSettings& chainSettings)
+{
+    auto hpfCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighPass(getSampleRate(), 18.f);
+    
+    updateCoefficients(leftChain.get<ChainPositions::dcBlock1>().coefficients, hpfCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::dcBlock1>().coefficients, hpfCoefficients);
+    updateCoefficients(leftChain.get<ChainPositions::dcBlock2>().coefficients, hpfCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::dcBlock2>().coefficients, hpfCoefficients);
+    updateCoefficients(leftChain.get<ChainPositions::dcBlock3>().coefficients, hpfCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::dcBlock3>().coefficients, hpfCoefficients);
+    updateCoefficients(leftChain.get<ChainPositions::dcBlock4>().coefficients, hpfCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::dcBlock4>().coefficients, hpfCoefficients);
 }
 
 void Fuzzmeup1AudioProcessor::updateTrim(const ChainSettings& chainSettings)
@@ -283,11 +365,19 @@ void Fuzzmeup1AudioProcessor::updateAll()
 {
     auto chainSettings = getChainSettings(apvts);
     
+    updateShelfCoefficients(chainSettings);
+    
     updateColor(chainSettings);
+    
+    updateBias(chainSettings);
 
     updateDrive(chainSettings);
     
+    setFirstFunctionToUse(chainSettings.mButtonState);
+    
     updateDriveComp(chainSettings);
+    
+    updateDCBlock(chainSettings);
     
     updateTrim(chainSettings);
 }
@@ -312,12 +402,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout
                                                            juce::NormalisableRange<float>(-24.f, 6.f, 0.1f, 1.0f),
                                                            0.f));
     
-    juce::StringArray stringArray;
-    stringArray.add("F");
-    stringArray.add("M");
-    stringArray.add("U");
+    layout.add(std::make_unique<juce::AudioParameterBool>("F Button", "F Button", true));
     
-    layout.add(std::make_unique<juce::AudioParameterChoice>("Distortion Type", "Distortion Type", stringArray, 0));
+    layout.add(std::make_unique<juce::AudioParameterBool>("M Button", "M Button", false));
+    
+    layout.add(std::make_unique<juce::AudioParameterBool>("U Button", "U Button", false));
     
     return layout;
 }

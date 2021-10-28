@@ -14,12 +14,12 @@
       <FILE id="G4twAf" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
     <GROUP id="{7DDBC197-D7B9-2E26-7BFD-E2356D7EC809}" name="Images">
-      <FILE id="KHDkfh" name="FButtonOff.png" compile="0" resource="1" file="Images/FButtonOff.png"/>
-      <FILE id="IbarTa" name="FButtonOn.png" compile="0" resource="1" file="Images/FButtonOn.png"/>
-      <FILE id="EX2z0N" name="MButtonOff.png" compile="0" resource="1" file="Images/MButtonOff.png"/>
-      <FILE id="H195dv" name="MButtonOn.png" compile="0" resource="1" file="Images/MButtonOn.png"/>
-      <FILE id="IwHjX4" name="UButtonOff.png" compile="0" resource="1" file="Images/UButtonOff.png"/>
-      <FILE id="nsyPL3" name="UButtonOn.png" compile="0" resource="1" file="Images/UButtonOn.png"/>
+      <FILE id="JYHoLJ" name="FButtonOff.png" compile="0" resource="1" file="Images/FButtonOff.png"/>
+      <FILE id="QtnPJz" name="FButtonOn.png" compile="0" resource="1" file="Images/FButtonOn.png"/>
+      <FILE id="SNqttj" name="MButtonOff.png" compile="0" resource="1" file="Images/MButtonOff.png"/>
+      <FILE id="H3mwZJ" name="MButtonOn.png" compile="0" resource="1" file="Images/MButtonOn.png"/>
+      <FILE id="G5YhyC" name="UButtonOff.png" compile="0" resource="1" file="Images/UButtonOff.png"/>
+      <FILE id="L67fDq" name="UButtonOn.png" compile="0" resource="1" file="Images/UButtonOn.png"/>
       <FILE id="tSl3nU" name="BG.png" compile="0" resource="1" file="Images/BG.png"/>
       <FILE id="LChRpn" name="KnobTextureTransparent.png" compile="0" resource="1"
             file="Images/KnobTextureTransparent.png"/>

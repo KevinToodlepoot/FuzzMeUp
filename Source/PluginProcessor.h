@@ -15,7 +15,9 @@ struct ChainSettings
     float drive { 0 };
     float color { 0 };
     float trim { 0 };
-    int distType { 0 };
+    bool fButtonState { 0 };
+    bool mButtonState { 0 };
+    bool uButtonState { 0 };
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
@@ -76,7 +78,20 @@ private:
     
     using WaveShaper = juce::dsp::WaveShaper<float>;
     
-    using MonoChain = juce::dsp::ProcessorChain<Filter, Filter, Gain, WaveShaper, Gain, Gain>;
+    using Bias = juce::dsp::Bias<float>;
+    
+    using MonoChain = juce::dsp::ProcessorChain<Filter,
+                                                Filter,
+                                                Gain,
+                                                Bias,
+                                                WaveShaper,
+                                                WaveShaper,
+                                                Gain,
+                                                Filter,
+                                                Filter,
+                                                Filter,
+                                                Filter,
+                                                Gain>;
     
     MonoChain leftChain, rightChain;
     
@@ -85,19 +100,28 @@ private:
         LowShelf,
         Peak,
         Drive,
-        Distortion,
+        BiasPos,
+        Distortion1,
+        Distortion2,
         DriveComp,
+        dcBlock1,
+        dcBlock2,
+        dcBlock3,
+        dcBlock4,
         Trim
     };
     
     using Coefficients = Filter::CoefficientsPtr;
     
-    void setShelfCoeff (float cutoff, float q, float gain);
+    void updateShelfCoefficients (const ChainSettings& chainSettings);
     void updateColor (const ChainSettings& chainSettings);
+    void updateBias (const ChainSettings& chainSettings);
     static void updateCoefficients (Coefficients& old, const Coefficients& replacements);
     void updateDrive (const ChainSettings& chainSettings);
-    void setFunctionToUse ();
+    void setFirstFunctionToUse(bool onOff);
+    void setSecondFunctionToUse ();
     void updateDriveComp (const ChainSettings& chainSettings);
+    void updateDCBlock (const ChainSettings& chainSettings);
     void updateTrim (const ChainSettings& chainSettings);
     
     void updateAll ();
