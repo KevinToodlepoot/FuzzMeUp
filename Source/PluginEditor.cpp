@@ -198,9 +198,9 @@ Fuzzmeup1AudioProcessorEditor::Fuzzmeup1AudioProcessorEditor (Fuzzmeup1AudioProc
         driveSliderAttachment(audioProcessor.apvts, "Drive", driveSlider),
         colorSliderAttachment(audioProcessor.apvts, "Color", colorSlider),
         trimSliderAttachment(audioProcessor.apvts, "Trim", trimSlider),
-        fButtonAttachment(audioProcessor.apvts, "F Button", fButton),
-        mButtonAttachment(audioProcessor.apvts, "M Button", mButton),
-        uButtonAttachment(audioProcessor.apvts, "U Button", uButton)
+        fButtonAttachment(audioProcessor.apvts, "F", fButton),
+        mButtonAttachment(audioProcessor.apvts, "M", mButton),
+        uButtonAttachment(audioProcessor.apvts, "U", uButton)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.

@@ -114,6 +114,8 @@ void Fuzzmeup1AudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    leftChain.reset();
+    rightChain.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -161,14 +163,18 @@ void Fuzzmeup1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     
     juce::dsp::AudioBlock<float> block(buffer);
     
+    if (totalNumInputChannels > 1)
+    {
+        auto rightBlock = block.getSingleChannelBlock(1);
+        juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
+        rightChain.process(rightContext);
+    }
+    
     auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(1);
     
     juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
-    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
-     
+    
     leftChain.process(leftContext);
-    rightChain.process(rightContext);
 }
 
 float Fuzzmeup1AudioProcessor::fuzzExp1(float x, float k)
@@ -247,7 +253,7 @@ void Fuzzmeup1AudioProcessor::updateShelfCoefficients (const ChainSettings& chai
 
 void Fuzzmeup1AudioProcessor::updateColor (const ChainSettings& chainSettings)
 {
-    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.33f, 2.f);
+    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.color, 0.5f, 2.f);
     
     updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
@@ -394,7 +400,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Color",
                                                            "Color",
-                                                           juce::NormalisableRange<float>(20.f, 10000.f, 1.f, 0.25f),
+                                                           juce::NormalisableRange<float>(20.f, 7000.f, 1.f, 0.25f),
                                                            20.f));
     
     layout.add(std::make_unique<juce::AudioParameterFloat>("Trim",
@@ -402,11 +408,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout
                                                            juce::NormalisableRange<float>(-24.f, 6.f, 0.1f, 1.0f),
                                                            0.f));
     
-    layout.add(std::make_unique<juce::AudioParameterBool>("F Button", "F Button", true));
+    layout.add(std::make_unique<juce::AudioParameterBool>("F", "F", true));
     
-    layout.add(std::make_unique<juce::AudioParameterBool>("M Button", "M Button", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("M", "M", false));
     
-    layout.add(std::make_unique<juce::AudioParameterBool>("U Button", "U Button", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("U", "U", false));
     
     return layout;
 }
